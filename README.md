@@ -1,31 +1,34 @@
 # 🧠 Configurador Dinámico de Swap y ZRAM para Linux
 
-Este script fue diseñado por **Jeffersson Pretell** para automatizar y optimizar la configuración de memoria virtual en sistemas Linux (Debian/Ubuntu).  
-Ajusta automáticamente el tamaño del **swapfile** y habilita **ZRAM** (swap comprimido en RAM), adaptándose a la cantidad de RAM física disponible.
+Este script fue creado por **Jeffersson Pretell** como una herramienta personal para automatizar la configuración del **swap** y **ZRAM** en sistemas Linux Debian/Ubuntu.  
+No fue hecho con fines de distribución, ni como un paquete oficial: simplemente es un **script práctico que guardo en GitHub para cuando vuelva a necesitarlo**.
 
 ---
 
-## 🎯 Objetivo
+## 🎯 ¿Por qué lo hice?
 
-- Mejorar el rendimiento general del sistema.
-- Prevenir congelamientos por saturación de RAM.
-- Usar la RAM de forma eficiente y dinámica (ZRAM).
-- Aplicar buenas prácticas con `swappiness`.
+A veces reinstalo Linux o configuro laptops nuevas, y no quiero estar recordando cada paso para:
 
----
+- Ajustar el tamaño correcto del swap según la RAM
+- Activar ZRAM (swap comprimido en RAM)
+- Evitar congelamientos del sistema por uso intensivo de memoria
+- Aplicar buenas prácticas como `swappiness = 15`
 
-## 📦 Características
-
-✅ Detección automática de la cantidad de RAM  
-✅ Cálculo proporcional del tamaño de `swapfile`  
-✅ Creación, activación y registro de swap en `/etc/fstab`  
-✅ Instalación y activación de ZRAM (`zram-config`)  
-✅ Ajuste de `vm.swappiness=15` para evitar uso anticipado del swap  
-✅ Compatible con Debian, Ubuntu y derivados
+Este script me ahorra tiempo y errores. Es simple, confiable, y adaptable.
 
 ---
 
-## 📐 Lógica para asignación dinámica de swap
+## 📦 ¿Qué hace?
+
+✔️ Detecta automáticamente cuánta RAM tiene el equipo  
+✔️ Calcula y crea un `swapfile` con tamaño proporcional  
+✔️ Instala y activa `zram-config`  
+✔️ Ajusta el `swappiness` del sistema para mayor eficiencia  
+✔️ Deja todo listo tras reiniciar
+
+---
+
+## 📐 Lógica para calcular el tamaño de swap
 
 | RAM detectada   | Swap asignado     |
 |------------------|-------------------|
@@ -35,10 +38,10 @@ Ajusta automáticamente el tamaño del **swapfile** y habilita **ZRAM** (swap co
 
 ---
 
-## 🚀 Instalación y uso
+## 🧑‍💻 ¿Cómo usarlo?
 
-### 1. Clona o descarga este script
+1. **Clona el repo (o descárgalo directamente desde GitHub)**
 
 ```bash
-git clone https://github.com/tu_usuario/configurador-swap-zram.git
-cd configurador-swap-zram
+git clone https://github.com/jeffersson-pretell/swap-zram-personal.git
+cd swap-zram-personal
