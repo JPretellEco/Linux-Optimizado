@@ -1,44 +1,64 @@
-# 🧠 Configurador Dinámico de Swap y ZRAM para Linux
+#!/bin/bash
 
-Este script fue diseñado por **Jeffersson Pretell** para automatizar y optimizar la configuración de memoria virtual en sistemas Linux (Debian/Ubuntu).  
-Ajusta automáticamente el tamaño del **swapfile** y habilita **ZRAM** (swap comprimido en RAM), adaptándose a la cantidad de RAM física disponible.
+# Script: configurar_swap_dinamico.sh
+# Autor: Jeffersson Pretell
+# Propósito: Detectar RAM instalada y crear swap y zram proporcionales
 
----
+echo "🧠 Detectando RAM física total del sistema..."
+total_ram_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+total_ram_gb=$(( (total_ram_kb / 1024 / 1024) + 1 ))  # Redondea al siguiente GiB
 
-## 🎯 Objetivo
+echo "💾 RAM detectada: ${total_ram_gb} GiB"
 
-- Mejorar el rendimiento general del sistema.
-- Prevenir congelamientos por saturación de RAM.
-- Usar la RAM de forma eficiente y dinámica (ZRAM).
-- Aplicar buenas prácticas con `swappiness`.
+# Reglas proporcionales:
+# - Si RAM ≤ 4 GiB → swap = RAM x2
+# - Si RAM 4-8 GiB → swap = RAM x1.5
+# - Si RAM > 8 GiB → swap = RAM x1 (sin hibernación)
+if [ "$total_ram_gb" -le 4 ]; then
+    swap_size_gb=$(( total_ram_gb * 2 ))
+elif [ "$total_ram_gb" -le 8 ]; then
+    swap_size_gb=$(( total_ram_gb * 3 / 2 ))
+else
+    swap_size_gb=$(( total_ram_gb ))
+fi
 
----
+echo "📐 Swap asignado dinámicamente: ${swap_size_gb} GiB"
 
-## 📦 Características
+# 1. Desactivar y eliminar swap anterior
+echo "🔧 Eliminando swap anterior si existe..."
+sudo swapoff /swapfile 2>/dev/null
+sudo rm -f /swapfile
 
-✅ Detección automática de la cantidad de RAM  
-✅ Cálculo proporcional del tamaño de `swapfile`  
-✅ Creación, activación y registro de swap en `/etc/fstab`  
-✅ Instalación y activación de ZRAM (`zram-config`)  
-✅ Ajuste de `vm.swappiness=15` para evitar uso anticipado del swap  
-✅ Compatible con Debian, Ubuntu y derivados
+# 2. Crear nuevo swapfile
+echo "📦 Creando swapfile de ${swap_size_gb} GiB..."
+sudo fallocate -l ${swap_size_gb}G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=$((swap_size_gb * 1024)) status=progress
 
----
+# 3. Permisos y activación
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
 
-## 📐 Lógica para asignación dinámica de swap
+# 4. Registro en fstab
+if ! grep -q "/swapfile" /etc/fstab; then
+    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+fi
 
-| RAM detectada   | Swap asignado     |
-|------------------|-------------------|
-| ≤ 4 GiB          | RAM × 2           |
-| 4 – 8 GiB        | RAM × 1.5         |
-| > 8 GiB          | RAM × 1.0         |
+# 5. Instalar ZRAM
+echo "⚡ Instalando zram-config..."
+sudo apt update
+sudo apt install -y zram-config
 
----
+# 6. Ajustar swappiness a 15
+echo "🧠 Ajustando swappiness a 15..."
+echo 'vm.swappiness=15' | sudo tee /etc/sysctl.d/99-swappiness.conf
+sudo sysctl -p /etc/sysctl.d/99-swappiness.conf
 
-## 🚀 Instalación y uso
+# 7. Reporte final
+echo -e "\n✅ Swap y ZRAM configurados proporcionalmente:"
+free -h
+echo -e "\n📄 Detalles de swap:"
+cat /proc/swaps
+echo -e "\n🧠 Swappiness actual:"
+cat /proc/sys/vm/swappiness
 
-### 1. Clona o descarga este script
-
-```bash
-git clone https://github.com/tu_usuario/configurador-swap-zram.git
-cd configurador-swap-zram
+echo -e "\n🌀 Se recomienda reiniciar para que ZRAM inicie correctamente.\n"
