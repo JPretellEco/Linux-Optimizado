@@ -37,11 +37,3 @@ Este script me ahorra tiempo y errores. Es simple, confiable, y adaptable.
 | > 8 GiB          | RAM × 1.0         |
 
 ---
-
-## 🧑‍💻 ¿Cómo usarlo?
-
-1. **Clona el repo (o descárgalo directamente desde GitHub)**
-
-```bash
-git clone https://github.com/jeffersson-pretell/swap-zram-personal.git
-cd swap-zram-personal
